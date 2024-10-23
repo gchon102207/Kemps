@@ -1,0 +1,1 @@
+var gameURL = 'http://localhost:5000';      
