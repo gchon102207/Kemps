@@ -1,0 +1,65 @@
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.5;
+    min-height: 100vh;
+    background: #185B3A;
+    flex-direction: column;
+    margin: 0;
+}
+
+.container{
+    display: flex;
+    justify-content: space-between;
+    padding-left: 260px;
+}
+.invites {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; 
+    height: 100vh; 
+    padding: 20px;
+    box-sizing: border-box; 
+    overflow-y: auto; 
+    background-color: #185337; 
+    border-radius: 8px;
+    font-size: 10px;
+    color:white;
+    text-align: center;
+    font-family: "Noto Sans Lao", sans-serif;
+}
+
+.friends {
+    position: fixed;
+    top: 0;
+    right: 0; 
+    width: 250px; 
+    height: 100vh; 
+    padding: 20px;
+    box-sizing: border-box; 
+    overflow-y: auto; 
+    background-color: #185337; 
+    border-radius: 8px;
+    font-size: 10px;
+    color: white;
+    text-align: center;
+    font-family: "Noto Sans Lao", sans-serif;
+}
+
+button {
+    padding: 20px 200px; 
+    border-radius: 10px;
+    margin-top: 50,px;
+    margin-bottom: 50px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    background-color: #09360E;
+    width: 100%; 
+    max-width: 800px;
+    font-size: 25px; 
+    font-family: "Noto Sans Lao", sans-serif;
+    white-space: nowrap;
+}

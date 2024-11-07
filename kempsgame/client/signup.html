@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Kemps Online</title>
+    <link rel="stylesheet" type="text/css" href="/client/css/signup.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/client/js/config.js"></script>
+    <script src='/client/js/signup.js' async></script>
+</head>
+
+<body>
+    <div class="main">
+        <div class="container">
+            <h1>Register</h1>
+            <form id="registerForm" novalidate>
+                <label for="email">
+                    Email address:
+                </label>
+                <input type="email" id="email" placeholder="Enter Email" required>
+
+                <label for="username">
+                    Username:
+                </label>
+                <input type="text" id="username" placeholder="Enter Username" required>
+
+                <label for="password">
+                    Password:
+                </label>
+                <input type="password" id="password" placeholder="Enter Password" required>
+                
+                <label for="confirmPassword">
+                    Confirm Password:
+                </label>
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+
+                <div id="password-error" class="error" style="display:none">
+                    Passwords do not match!
+                </div>
+
+                <div id="email-error" class="error" style="display:none">
+                    Please enter a valid email address!
+                </div>
+
+                <div id="email-exists" class="error" style="display:none">
+                    This email is already in use!
+                </div>
+
+                <div id="register_button" class="btn-group-variant config-buttons">
+                    <button id="register" class="btn btn-sm edit_btn">Register</button>
+            </form>
+            <h3>Already have an account?
+                <a href="/home", 
+                style="text-decoration: none;" class="static-links";>
+                    Login
+        </div>
+    </div>
+</body>
+
+</html>

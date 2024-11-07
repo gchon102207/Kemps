@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kemps Online</title>
+    <link rel="stylesheet" type="text/css" href="/client/css/home.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/client/js/config.js"></script>
+    <script src='/client/js/home.js' async></script>
+</head>
+
+<body>
+    <div class="main">
+        <h1>Kemps Online</h1>
+        <h2>Enter your login credentials</h2>
+
+        <form id="loginForm">
+            <label for="email">
+                Email Address:
+            </label>
+            <input type="email" id="email" placeholder="Enter Email Address" required>
+
+            <label for="password">
+                Password:
+            </label>
+            <input type="password" id="password" name="password" 
+                placeholder="Enter your Password" required>
+
+            <div id="login_button" class="btn-group-variant config-buttons">
+                <button id="login" class="btn btn-sm edit_btn">Log In</button>
+
+            <div id="login-error" class="error" style="display:none">
+                Invalid Email or Password!
+            </div>
+        </form>
+        <h3>Not registered?
+            <a href="/signup", 
+            style="text-decoration: none;" class="static-links";>
+                Create an account
+            </a>
+        </p>
+    </div>
+</body>
+
+</html>

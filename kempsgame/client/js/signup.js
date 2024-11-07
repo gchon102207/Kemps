@@ -4,6 +4,7 @@ const password = document.getElementById('password');
 const confirmPassword = document.getElementById('confirmPassword');
 const passwordError = document.getElementById('password-error');
 const emailError = document.getElementById('email-error');
+const emailExists = document.getElementById('email-exists')
 
 form.addEventListener('submit', async (event) => {
     event.preventDefault(); // Prevent the default form submission
@@ -46,8 +47,11 @@ form.addEventListener('submit', async (event) => {
 
             const result = await response.json();
             if (response.ok) {
-                alert(result.msg); 
-                form.reset(); // Clear the form fields
+                form.reset();
+                window.location.href = result.redirectUrl; 
+            } else if (response.status === 400){
+                emailExists.style.display = 'block'; //show email exists error
+                emailExists.innerText = result.msg;
             } else {
                 alert('Error: ' + result.msg); // Show error message
             }

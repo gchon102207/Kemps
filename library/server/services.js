@@ -14,7 +14,7 @@ var services = function(app){
             confirmPassword: req.body.confirmPassword
 
         };
-
+    console.log(json.stringify(data))
         try{
             //Create a connection to the database server
             const conn = await client.connect();
