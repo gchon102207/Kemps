@@ -9,6 +9,15 @@ body {
     margin: 0;
 }
 
+p {
+    position: absolute;
+    top: 0px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    color:white;
+    font-family: "Noto Sans Lao", sans-serif;
+    font-size: 30px;
+}
 .container{
     display: flex;
     justify-content: space-between;
@@ -29,6 +38,7 @@ body {
     color:white;
     text-align: center;
     font-family: "Noto Sans Lao", sans-serif;
+    white-space: nowrap;
 }
 
 .friends {

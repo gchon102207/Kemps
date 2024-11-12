@@ -38,28 +38,31 @@ var services = function(app){
 
     app.post('/login', async function(req, res) {
         const { email, password } = req.body;
-
+    
         try {
             const conn = await client.connect();
             const db = conn.db(DBNAME);
             const coll = db.collection('accounts');
-
+    
             // Find user by email
             const user = await coll.findOne({ email: email });
             if (!user) {
                 await conn.close();
                 return res.status(400).json({ msg: "Invalid email or password" });
             }
-
+    
             if (user.password !== password) {
                 await conn.close();
                 return res.status(400).json({ msg: "Invalid email or password" });
             }
-
-            // Successful login response with redirect URL
+    
+            // Successful login response with username and redirect URL
             await conn.close();
-            return res.status(200).json({ msg: "Login successful", redirectUrl: "/profile" });
-            
+            return res.status(200).json({ 
+                msg: "Login successful", 
+                username: user.username, 
+                redirectUrl: "/profile" 
+            });
         } catch (err) {
             await client.close();
             return res.status(500).json({ msg: "Server error: " + err });
