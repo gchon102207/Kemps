@@ -34,9 +34,11 @@ p {
     overflow-y: auto; 
     background-color: #185337; 
     border-radius: 8px;
-    font-size: 10px;
+    font-size: 13px;
     color:white;
     text-align: center;
+    padding-left: 0; 
+    margin-left: 0; 
     font-family: "Noto Sans Lao", sans-serif;
     white-space: nowrap;
 }
@@ -52,16 +54,20 @@ p {
     overflow-y: auto; 
     background-color: #185337; 
     border-radius: 8px;
-    font-size: 10px;
+    font-size: 15px;
     color: white;
     text-align: center;
     font-family: "Noto Sans Lao", sans-serif;
 }
 
+.button-container {
+    margin-top: 100px;
+}
+
 button {
     padding: 20px 200px; 
     border-radius: 10px;
-    margin-top: 50,px;
+    margin-top: 0 px;
     margin-bottom: 50px;
     border: none;
     color: white;
@@ -72,4 +78,19 @@ button {
     font-size: 25px; 
     font-family: "Noto Sans Lao", sans-serif;
     white-space: nowrap;
+}
+
+#friendsList {
+    list-style-type: none;
+    font-size: 20px;
+    padding-left: 0; 
+    margin-left: 0; 
+}
+
+#friendsList li {
+    margin-bottom: 30px; 
+}
+
+.invites h1 {
+    margin-left: 18px; 
 }

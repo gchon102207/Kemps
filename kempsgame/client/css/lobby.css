@@ -1,0 +1,45 @@
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.5;
+    min-height: 100vh;
+    background: #185B3A;
+    flex-direction: column;
+    margin: 0;
+}
+
+.lobby_info{
+    color:white;
+    font-family: "Noto Sans Lao", sans-serif;
+}
+
+h1{
+    position: absolute;
+    top: 5px;
+    margin: 0;
+    right: 520px;
+}
+
+h2{
+    position: absolute;
+    top: 50px;
+    left: 20px;
+    margin: 0;
+}
+
+button {
+    padding: 20px 200px; 
+    border-radius: 10px;
+    margin-top: 0 px;
+    margin-bottom: 50px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    background-color: #09360E;
+    width: 100%; 
+    max-width: 800px;
+    font-size: 25px; 
+    font-family: "Noto Sans Lao", sans-serif;
+    white-space: nowrap;
+}

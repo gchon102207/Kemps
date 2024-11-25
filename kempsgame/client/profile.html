@@ -3,6 +3,7 @@
 <head>
     <title>Kemps Online</title>
     <link rel="stylesheet" type="text/css" href="/client/css/profile.css">
+    <script src="/socket.io/socket.io.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@100..900&display=swap" rel="stylesheet">
@@ -12,21 +13,25 @@
 </head>
 <body>
     <p id="username"></p>
+    <div id="friendRequestsContainer"></div>
     <div class="container">
         <div class="invites">
             <h1>Pending Invites</h1>
         </div>
         <div class="friends">
             <h1>Friends List</h1>
+            <ul id="friendsList"></ul>
         </div>
     </div>
     <div class="button-container">
         <div id="createGameButton" class="btn-group-variant config-buttons">
             <button id="createGame" class="btn btn-sm edit_btn">Create Game</button>
         </div>
-        <div id="addFriendsButtonContainer" class="btn-group-variant config-buttons">
-            <button id="addFriendsButton" class="btn btn-sm edit_btn">Add Friends</button>
+        <div id="addFriendButton" class="btn-group-variant config-buttons">
+            <button id="addFriendButton" class="btn btn-sm edit_btn">Add Friends</button>
         </div>
-    </div>
+        <div id="joinGameButton" class="btn-group-variant config-buttons">
+            <button id="joinGame" class="btn btn-sm edit_btn">Join Game</button>
+        </div>
 </body>
 </html>

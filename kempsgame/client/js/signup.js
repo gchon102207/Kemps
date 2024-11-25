@@ -47,6 +47,7 @@ form.addEventListener('submit', async (event) => {
 
             const result = await response.json();
             if (response.ok) {
+                localStorage.setItem('username', data.username);
                 form.reset();
                 window.location.href = result.redirectUrl; 
             } else if (response.status === 400){
