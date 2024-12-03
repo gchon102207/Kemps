@@ -1,20 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kemps Online: Lobby</title>
     <link rel="stylesheet" type="text/css" href="/client/css/lobby.css">
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="/client/js/config.js"></script>
-    <script src='/client/js/lobby.js' async></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <script src="/client/js/config.js"></script> 
+    <script src="/client/js/game.js"></script>
+    <script src="/client/js/lobby.js"></script>
 </head>
 <body>
     <div class="lobby_info">
         <h1>Lobby Code: <span id="lobby_code_display"></span></h1>
         <h2>Players in Lobby:<div id="players_display"></div></h2>
+        <button id="start_game_button" disabled>Start Game</button>
     </div>
-    <div id="start_button" class="btn-group-variant config-buttons">
-        <button id="start" class="btn btn-sm edit_btn">Start Game</button>
-    </div>
+    
+    <div id="game-container" style="display:none;"></div> 
 </body>
 </html>

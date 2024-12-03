@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;    
+    height: 100vh;
+    background-color: #185B3A;
+    }
+
+canvas {
+    display: block; /* Ensures the game canvas is centered */
+    }       

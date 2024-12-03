@@ -28,7 +28,7 @@ h2{
     margin: 0;
 }
 
-button {
+button:not(:disabled) {
     padding: 20px 200px; 
     border-radius: 10px;
     margin-top: 0 px;
@@ -36,6 +36,22 @@ button {
     border: none;
     color: white;
     cursor: pointer;
+    background-color: #09360E;
+    width: 100%; 
+    max-width: 800px;
+    font-size: 25px; 
+    font-family: "Noto Sans Lao", sans-serif;
+    white-space: nowrap;
+}
+
+button:disabled {
+    padding: 20px 200px; 
+    border-radius: 10px;
+    margin-top: 0 px;
+    margin-bottom: 50px;
+    border: none;
+    color: white;
+    cursor: not-allowed;
     background-color: #09360E;
     width: 100%; 
     max-width: 800px;

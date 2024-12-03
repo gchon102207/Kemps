@@ -20,5 +20,9 @@ var router = function(app){
     app.get('/lobby', function(req, res) {
         res.status(200).sendFile(path.join(__dirname + "/../client/lobby.html"));    
     })
+
+    app.get('/game', function(req, res) {
+        res.status(200).sendFile(path.join(__dirname + "/../client/game.html"));    
+    })
 };
 module.exports = router; 

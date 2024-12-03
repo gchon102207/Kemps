@@ -69,6 +69,12 @@ io.on('connection', (socket) => {
             socket.emit('error', { message: 'Lobby code does not exist' });
         }
     });
+    
+    socket.on('startGame', ({ lobbyCode }) => {
+        console.log(`Starting game in lobby: ${lobbyCode}`);
+        // Broadcast to all clients in the lobby
+        io.to(lobbyCode).emit('gameStarting'); // Emit the 'gameStarting' event to all players in the lobby
+    });
 
     socket.on('disconnect', () => {
         delete users[socket.id];
