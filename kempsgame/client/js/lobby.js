@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Game is starting...");
         console.log('Community Cards:', data.communityCards);
         console.log('Player Cards:', data.playerCards);
+        console.log('Teams:', data.teams);
 
         // Store cards globally for the current user
         const currentPlayerCards = data.playerCards[storedUsername];
@@ -125,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             height: window.innerHeight,
             backgroundColor: '#185B3A',
             parent: 'game-container',
+            resolution: window.devicePixelRatio,
             scene: {
                 preload: preload,
                 create: create,
@@ -134,18 +136,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         game = new Phaser.Game(config);
 
-        let selectedCard = null; // Store the selected card for swapping
-
         function preload() {
-            // Load community cards
-            window.communityCards.forEach(card => {
+            const allCards = [
+                'card_clubs_02', 'card_clubs_03', 'card_clubs_04', 'card_clubs_05', 'card_clubs_06', 'card_clubs_07', 'card_clubs_08', 'card_clubs_09', 'card_clubs_10', 'card_clubs_J', 'card_clubs_Q', 'card_clubs_K', 'card_clubs_A',
+                'card_hearts_02', 'card_hearts_03', 'card_hearts_04', 'card_hearts_05', 'card_hearts_06', 'card_hearts_07', 'card_hearts_08', 'card_hearts_09', 'card_hearts_10', 'card_hearts_J', 'card_hearts_Q', 'card_hearts_K', 'card_hearts_A',
+                'card_spades_02', 'card_spades_03', 'card_spades_04', 'card_spades_05', 'card_spades_06', 'card_spades_07', 'card_spades_08', 'card_spades_09', 'card_spades_10', 'card_spades_J', 'card_spades_Q', 'card_spades_K', 'card_spades_A',
+                'card_diamonds_02', 'card_diamonds_03', 'card_diamonds_04', 'card_diamonds_05', 'card_diamonds_06', 'card_diamonds_07', 'card_diamonds_08', 'card_diamonds_09', 'card_diamonds_10', 'card_diamonds_J', 'card_diamonds_Q', 'card_diamonds_K', 'card_diamonds_A'
+            ];
+        
+            allCards.forEach(card => {
                 this.load.image(card, `client/assets/${card}.png`);
-                board=this;
-            });
-
-            // Load player cards
-            window.playerCards.forEach(card => {
-                this.load.image(card, `client/assets/${card}.png`);
+                board = this;
             });
 
             // Load card back
@@ -160,27 +161,31 @@ document.addEventListener('DOMContentLoaded', () => {
             this.communityStartY = window.innerHeight / 1.5 - cardHeight / 2;
             this.communityCard = [];
             this.playerCard = [];
+            this.selectedCard = null;
 
-            // Display community cards
-            window.communityCards.forEach((card, index) => {
-                const gap = 10;
-                this.communityCard.push(this.add.image(this.communityStartX + (index * (this.cardWidth + gap)), this.communityStartY, card).setScale(1.5));
-                this.communityCard[index].setName(`communityCard${index}`);  // Give the card a unique name
-                this.communityCard[index].setInteractive();
-                this.communityCard[index].on('pointerdown', () => {
-                    console.log("Community Card Clicked:", card);
-                    if (selectedCard) {
-                        // Swap the selected card with the clicked community card
-                        socket.emit('swapCard', { 
-                            playerCard: selectedCard.cardName,  // Send the name of the selected player card
-                            communityCard: card,  // Send the community card that was clicked
-                            swappingPlayer: storedUsername
-                        });
-                        selectedCard.setAlpha(1);  // Deselect the card (reset alpha)
-                        selectedCard = null;  // Reset the selected card
-                    }
+    // Display community cards
+    window.communityCards.forEach((card, index) => {
+        const gap = 10;
+        this.communityCard.push(this.add.image(this.communityStartX + (index * (this.cardWidth + gap)), this.communityStartY, card).setScale(1.5));
+        console.log(this.communityCard[index])
+        this.communityCard[index].setName(`communityCard${index}`);  // Give the card a unique name
+        this.communityCard[index].setInteractive();
+        let arrayNum = index;
+        this.communityCard[index].on('pointerdown', () => {
+            console.log("Community Card Clicked:", card);
+            if (this.selectedCard) {
+                // Swap the selected card with the clicked community card
+                socket.emit('swapCard', { 
+                    playerCard: this.selectedCard.cardName,  // Send the name of the selected player card
+                    communityCard: window.communityCards[index],  // Send the community card that was clicked
+                    swappingPlayer: storedUsername
                 });
-            });
+
+                this.selectedCard.setAlpha(1);  // Deselect the card (reset alpha)
+                this.selectedCard = null;  // Reset the selected card
+            }
+        });
+    });
 
             this.playerStartX = (window.innerWidth / 2.2)
             this.playerStartY = window.innerHeight / 1.25
@@ -193,12 +198,103 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.playerCard[index].setInteractive();
                 this.playerCard[index].on('pointerdown', () => {
                     // Highlight the clicked card
-                    if (selectedCard) {
-                        selectedCard.setAlpha(1);  // Deselect the previous card
+                    if (this.selectedCard) {
+                        this.selectedCard.setAlpha(1);  // Deselect the previous card
                     }
                     this.playerCard[index].setAlpha(0.5);  // Highlight the selected card
-                    selectedCard = this.playerCard[index];  // Store the selected card
+                    this.selectedCard = this.playerCard[index];  // Store the selected card
                 });
+            });
+
+            // Create the "Flush" button
+            const buttonWidth = 125;
+            const buttonHeight = 62.5;
+            const buttonX = window.innerWidth / 2 - buttonWidth / 2; 
+            const buttonY = window.innerHeight / 1.53 - buttonHeight / 2; 
+            const buttonRadius = 15;
+
+            const flushButton = this.add.graphics();
+            flushButton.fillStyle(0x09360E, 1); // Button color
+            flushButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, buttonRadius); // Position and size
+            flushButton.setInteractive(new Phaser.Geom.Rectangle(buttonX, buttonY, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains);
+
+            const flushButtonText = this.add.text(buttonX + buttonWidth / 2, buttonY + buttonHeight / 2, 'Flush (0/4)', { 
+                fontFamily: 'Noto Sans Lao, sans-serif',
+                fontSize: '16px', 
+                fill: '#fff',
+                resolution: window.devicePixelRatio 
+            }).setOrigin(0.5, 0.5); // Center the text
+
+            flushButton.on('pointerdown', () => {
+                socket.emit('flushRequest', { username: storedUsername });
+            });
+
+            // Create the "Counterkemps" button
+            const counterkempsButtonY = window.innerHeight / 1.3;
+            const counterkempsButtonX = window.innerWidth / 1.5;
+            const counterkempsButton = this.add.graphics();
+            counterkempsButton.fillStyle(0x000000, 1); // Button color
+            counterkempsButton.fillRoundedRect(counterkempsButtonX, counterkempsButtonY, buttonWidth, buttonHeight, buttonRadius); // Position and size
+            counterkempsButton.setInteractive(new Phaser.Geom.Rectangle(counterkempsButtonX, counterkempsButtonY, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains);
+
+            const counterkempsButtonText = this.add.text(counterkempsButtonX + buttonWidth / 2, counterkempsButtonY + buttonHeight / 2, 'Counterkemps', { 
+                fontFamily: 'Noto Sans Lao, sans-serif',
+                fontSize: '16px', 
+                fill: '#fff',
+                resolution: window.devicePixelRatio 
+            }).setOrigin(0.5, 0.5); // Center the text
+
+            counterkempsButton.on('pointerdown', () => {
+                socket.emit('counterkempsRequest', { username: storedUsername });
+            });
+
+            // Listen for the counterkemps result event
+            socket.on('counterkempsResult', (result) => {
+                alert(result.message); // Display the message to the user
+            });
+
+            // Create the "Kemps" button
+            const kempsButtonY = counterkempsButtonY;
+            const kempsButtonX = window.innerWidth - counterkempsButtonX - buttonWidth;
+            const kempsButton = this.add.graphics();
+            kempsButton.fillStyle(0xff0000, 1); // Red button color
+            kempsButton.fillRoundedRect(kempsButtonX, kempsButtonY, buttonWidth, buttonHeight, buttonRadius); // Position and size
+            kempsButton.setInteractive(new Phaser.Geom.Rectangle(kempsButtonX, kempsButtonY, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains);
+
+            const kempsButtonText = this.add.text(kempsButtonX + buttonWidth / 2, kempsButtonY + buttonHeight / 2, 'Kemps', { 
+                fontFamily: 'Noto Sans Lao, sans-serif',
+                fontSize: '16px', 
+                fill: '#fff',
+                resolution: window.devicePixelRatio 
+            }).setOrigin(0.5, 0.5); // Center the text
+
+            kempsButton.on('pointerdown', () => {
+                socket.emit('kempsRequest', { username: storedUsername });
+            });
+
+            // Listen for the kemps result event
+            socket.on('kempsResult', (result) => {
+                alert(result.message); // Display the message to the user
+});
+
+            // Listen for the flush completion event
+            socket.on('flushCompleted', (newCommunityCards) => {
+                // Update the community cards with the new cards
+                window.communityCards = newCommunityCards;
+
+                // Update community card images
+                window.communityCards.forEach((card, index) => {
+                    if (this.communityCard[index]) {
+                        this.communityCard[index].setTexture(card);
+                    } else {
+                        console.error('Community Card not found at index: ', index);
+                    }
+                });
+            });
+
+            // Listen for the flush progress event
+            socket.on('flushProgress', (count) => {
+                flushButtonText.setText(`Flush (${count}/4)`);
             });
 
             // Display top player cards
@@ -226,8 +322,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = this.add.image(rightPlayerStartX, rightPlayerStartY + (i * 40), 'card_back').setScale(this.scale);
                 card.setRotation(Math.PI / 2);  // Rotate 90 degrees (π/2 radians)
             }
-        }
 
+            // Listen for the counterkemps result event
+            socket.on('counterkempsResult', (result) => {
+                if (result.success) {
+                    alert('Counterkemps successful! Your team wins!');
+                } else {
+                    alert('Counterkemps failed. Your team loses.');
+                }
+            });
+            
+        }
         function update() {
         }
     }
@@ -235,56 +340,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for card swap completion
     socket.on('gameUpdated', (data) => {
         console.log("Game Updated:", data);
-        board.selectedCard = null; // Store the selected card for swapping
+        board.selectedCard = null; // Reset the selected card for swapping
     
-        // Update community cards
+        // Update the global community cards array
         window.communityCards = data.communityCards;
-        window.playerCards = data.playerCards[storedUsername];
-        
     
-        // Update community card images
+        // Update community card images and properties
         window.communityCards.forEach((card, index) => {
-            console.log(card, board.communityStartX, board.communityStartY);
-            var gap = 10;
-            board.communityCard[index].setTexture(card);
-            board.communityCard[index].texture.refresh();
-            /*var communityCard = board.add.image(board.communityStartX + (index * (board.cardWidth + gap)), board.communityStartY, card).setScale(1.5);
-            communityCard.setName(`communityCard${index}`);  // Give the card a unique name
-            communityCard.setInteractive();
-            communityCard.on('pointerdown', () => {
-                console.log("Community Card Clicked:", card);
-                if (board.selectedCard) {
-                    // Swap the selected card with the clicked community card
-                    socket.emit('swapCard', { 
-                        playerCard: board.selectedCard.cardName,  // Send the name of the selected player card
-                        communityCard: card,  // Send the community card that was clicked
-                        swappingPlayer: player
-                    });
-                    board.selectedCard.setAlpha(1);  // Deselect the card (reset alpha)
-                    board.selectedCard = null;  // Reset the selected card
-                }
-            });*/
+            if (board.communityCard[index]) {
+                board.communityCard[index].setTexture(card); // Update the texture
+                board.communityCard[index].cardName = card;  // Update the cardName property
+            } else {
+                console.error('Community Card not found at index: ', index);
+            }
         });
     
-        // Update player card images
-        if (data.swappingPlayer === storedUsername){
-            window.playerCards.forEach((card, index) => {
-                console.log(card);
-                board.playerCard[index].setTexture(card);
-                /* const playerCard = board.add.image(board.playerStartX + (index * (40)), board.playerStartY, card).setScale(board.scale);
-                playerCard.setName(`playerCard${index}`);  // Give the card a unique name
-                playerCard.cardName = card;  // Store the card name as a property
-                playerCard.setInteractive();
-                playerCard.on('pointerdown', () => {
-                    // Highlight the clicked card
-                    if (board.selectedCard) {
-                        board.selectedCard.setAlpha(1);  // Deselect the previous card
-                    }
-                    playerCard.setAlpha(0.5);  // Highlight the selected card
-                    board.selectedCard = playerCard;  // Store the selected card
-                }); */
-            });
-        }
+        // Update the global player cards array
+        window.playerCards = data.playerCards[storedUsername];
+    
+        // Update player card images and properties
+        window.playerCards.forEach((card, index) => {
+            if (board.playerCard[index]) {
+                board.playerCard[index].setTexture(card); // Update the texture
+                board.playerCard[index].cardName = card;  // Update the cardName property
+            } else {
+                console.error('Player Card not found at index: ', index);
+            }
+        });
     });
-
 });

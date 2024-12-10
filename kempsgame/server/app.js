@@ -18,7 +18,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/client", express.static(path.resolve(__dirname + "/../client/")));
 
-
 // Page listeners (routers)
 var router = require('./router.js');
 router(app);
@@ -39,6 +38,7 @@ const io = socketIo(server, {
 // Handle socket connections
 const users = {}; // Store users with their socket IDs
 const lobbies = new Map(); // Change from Set to Map
+const flushRequests = new Map(); // Map to track flush requests per lobby
 
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
@@ -50,7 +50,9 @@ io.on('connection', (socket) => {
     socket.on('createLobby', ({ username }) => {
         users[socket.id] = username;
         const lobbyCode = generateLobbyCode();
-        lobbies.set(lobbyCode, { communityCards: [], playerCards: {} }); // Initialize lobby with empty cards
+        const deck = generateDeck();
+        shuffleDeck(deck); // Shuffle the deck when the lobby is created
+        lobbies.set(lobbyCode, { communityCards: [], playerCards: {}, deck }); // Initialize lobby with empty cards and a shuffled deck
         socket.join(lobbyCode);
         io.to(lobbyCode).emit('lobbyCreated', { code: lobbyCode, users: getUsersInLobby(lobbyCode) });
     });
@@ -74,60 +76,59 @@ io.on('connection', (socket) => {
     socket.on('startGame', ({ lobbyCode }) => {
         console.log(`Starting game in lobby: ${lobbyCode}`);
 
-        const deck = [
-            'card_clubs_02', 'card_clubs_03', 'card_clubs_04', 'card_clubs_05', 'card_clubs_06', 'card_clubs_07', 'card_clubs_08', 'card_clubs_09', 'card_clubs_10', 'card_clubs_J', 'card_clubs_Q', 'card_clubs_K', 'card_clubs_A',
-            'card_hearts_02', 'card_hearts_03', 'card_hearts_04', 'card_hearts_05', 'card_hearts_06', 'card_hearts_07', 'card_hearts_08', 'card_hearts_09', 'card_hearts_10', 'card_hearts_J', 'card_hearts_Q', 'card_hearts_K', 'card_hearts_A',
-            'card_spades_02', 'card_spades_03', 'card_spades_04', 'card_spades_05', 'card_spades_06', 'card_spades_07', 'card_spades_08', 'card_spades_09', 'card_spades_10', 'card_spades_J', 'card_spades_Q', 'card_spades_K', 'card_spades_A',
-            'card_diamonds_02', 'card_diamonds_03', 'card_diamonds_04', 'card_diamonds_05', 'card_diamonds_06', 'card_diamonds_07', 'card_diamonds_08', 'card_diamonds_09', 'card_diamonds_10', 'card_diamonds_J', 'card_diamonds_Q', 'card_diamonds_K', 'card_diamonds_A',
-        ];
-
-        function shuffleDeck(deck) {
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]]; 
-            }
-        }
-
-        shuffleDeck(deck);
+        const lobbyData = lobbies.get(lobbyCode);
+        const deck = lobbyData.deck;
 
         // Draw the first 4 community cards
-        const communityCards = deck.splice(0, 4);
+        const communityCards = drawCards(deck, 4);
 
         // Assign 4 cards to each player
         const players = getUsersInLobby(lobbyCode);
         const playerCards = {};
         players.forEach((player, index) => {
-            playerCards[player] = deck.splice(0, 4); // Take 4 cards for each player
+            playerCards[player] = drawCards(deck, 4); // Take 4 cards for each player
         });
 
-        // Store the community and player cards at the lobby level in the Map
-        lobbies.set(lobbyCode, { communityCards, playerCards });
+        // Shuffle the players and divide them into two teams
+        shuffleArray(players);
+        const team1 = players.slice(0, 2);
+        const team2 = players.slice(2, 4);
 
-        // Emit 'gameStartingBroadcast' to all clients with their cards and community cards
-        io.to(lobbyCode).emit('gameStartingBroadcast', { communityCards, playerCards });
+        // Store the community and player cards at the lobby level in the Map
+        lobbies.set(lobbyCode, { communityCards, playerCards, deck, teams: { team1, team2 } });
+
+        // Emit 'gameStartingBroadcast' to all clients with their cards, community cards, and teams
+        io.to(lobbyCode).emit('gameStartingBroadcast', { communityCards, playerCards, teams: { team1, team2 } });
     });
 
     socket.on('swapCard', ({ playerCard, communityCard, swappingPlayer }) => {
-        console.log('Attempting to swap card')
-        console.log('player card: ', playerCard, 'community card: ',communityCard)
+        console.log('Attempting to swap card');
+        console.log('player card: ', playerCard, 'community card: ', communityCard);
         const lobbyCode = getLobbyCode(socket.id);
         const playerName = users[socket.id];
     
         if (lobbyCode && playerName) {
-            console.log('this is working') 
+            console.log('this is working');
             const lobbyData = lobbies.get(lobbyCode);
             const communityCards = lobbyData.communityCards;
             const playerCards = lobbyData.playerCards;
     
             // Find the index of the selected community and player card
-            console.log('Player deck: ', JSON.stringify(playerCards[playerName]), 'Community deck: ', JSON.stringify(communityCards))
+            console.log('Player deck: ', JSON.stringify(playerCards[playerName]), 'Community deck: ', JSON.stringify(communityCards));
             const communityIndex = communityCards.indexOf(communityCard);
             const playerIndex = playerCards[playerName].indexOf(playerCard);
+            console.log('community index: ', communityIndex, 'player index: ', playerIndex)
     
             if (communityIndex !== -1 && playerIndex !== -1) {
                 // Swap the cards in the community and player's deck
+                console.log('Swapping cards');
                 communityCards[communityIndex] = playerCard;
                 playerCards[playerName][playerIndex] = communityCard;
+    
+                // Update the lobby data with the new community and player cards
+                lobbyData.communityCards = communityCards;
+                lobbyData.playerCards = playerCards;
+                lobbies.set(lobbyCode, lobbyData);
     
                 // Emit updated game state
                 io.to(lobbyCode).emit('gameUpdated', { communityCards, playerCards, swappingPlayer });
@@ -135,6 +136,116 @@ io.on('connection', (socket) => {
                 console.log('Invalid card swap attempt');
                 socket.emit('error', { message: 'Invalid card swap attempt' });
             }
+        }
+    });
+
+    socket.on('flushRequest', ({ username }) => {
+        const lobbyCode = getLobbyCode(socket.id);
+        if (!lobbyCode) return;
+
+        if (!flushRequests.has(lobbyCode)) {
+            flushRequests.set(lobbyCode, new Set());
+        }
+
+        const lobbyFlushRequests = flushRequests.get(lobbyCode);
+        lobbyFlushRequests.add(username);
+
+        // Emit flush progress to all clients in the lobby
+        io.to(lobbyCode).emit('flushProgress', lobbyFlushRequests.size);
+
+        if (lobbyFlushRequests.size === 4) {
+            // All 4 users have clicked the "Flush" button
+            const lobbyData = lobbies.get(lobbyCode);
+            const newCommunityCards = drawCards(lobbyData.deck, 4); // Draw 4 new community cards from the deck
+            lobbyData.communityCards = newCommunityCards;
+
+            // Notify all clients in the lobby
+            io.to(lobbyCode).emit('flushCompleted', newCommunityCards);
+
+            // Reset the flush requests for the lobby
+            flushRequests.set(lobbyCode, new Set());
+        }
+    });
+
+    socket.on('counterkempsRequest', ({ username }) => {
+        const lobbyCode = getLobbyCode(socket.id);
+        if (!lobbyCode) return;
+    
+        const lobbyData = lobbies.get(lobbyCode);
+        const teams = lobbyData.teams;
+        const playerCards = lobbyData.playerCards;
+    
+        const team = teams.team1.includes(username) ? teams.team1 : teams.team2;
+        const opposingTeam = teams.team1.includes(username) ? teams.team2 : teams.team1;
+    
+        let success = false;
+        for (const player of opposingTeam) {
+            if (hasFourOfAKind(playerCards[player])) {
+                success = true;
+                break;
+            }
+        }
+    
+        if (success) {
+            // The opposing team has four of a kind
+            team.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('counterkempsResult', { message: 'You win' });
+            });
+            opposingTeam.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('counterkempsResult', { message: 'You lose' });
+            });
+        } else {
+            // The opposing team does not have four of a kind
+            team.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('counterkempsResult', { message: 'You lose' });
+            });
+            opposingTeam.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('counterkempsResult', { message: 'You win' });
+            });
+        }
+    });
+
+    socket.on('kempsRequest', ({ username }) => {
+        const lobbyCode = getLobbyCode(socket.id);
+        if (!lobbyCode) return;
+    
+        const lobbyData = lobbies.get(lobbyCode);
+        const teams = lobbyData.teams;
+        const playerCards = lobbyData.playerCards;
+    
+        const team = teams.team1.includes(username) ? teams.team1 : teams.team2;
+        const teammate = team.find(player => player !== username);
+        const opposingTeam = teams.team1.includes(username) ? teams.team2 : teams.team1;
+    
+        let success = false;
+        if (hasFourOfAKind(playerCards[teammate])) {
+            success = true;
+        }
+    
+        if (success) {
+            // The teammate has four of a kind
+            team.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You win' });
+            });
+            opposingTeam.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You lose' });
+            });
+        } else {
+            // The teammate does not have four of a kind
+            team.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You lose' });
+            });
+            opposingTeam.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You win' });
+            });
         }
     });
 
@@ -162,20 +273,55 @@ function getLobbyCode(socketId) {
     return null;
 }
 
-
-
-// Generate random community cards
-function generateCommunityCards() {
+function generateDeck() {
     const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
     const ranks = ['02', '03', '04', '05', '06', '07', '08', '09', '10', 'J', 'Q', 'K', 'A'];
 
-    const communityCards = [];
-    for (let i = 0; i < 4; i++) {
-        const randomSuit = suits[Math.floor(Math.random() * suits.length)];
-        const randomRank = ranks[Math.floor(Math.random() * ranks.length)];
-        communityCards.push(`card_${randomSuit}_${randomRank}`);
+    const deck = [];
+    for (const suit of suits) {
+        for (const rank of ranks) {
+            deck.push(`card_${suit}_${rank}`);
+        }
     }
-    return communityCards;
+    return deck;
+}
+
+function shuffleDeck(deck) {
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+}
+
+function drawCards(deck, count) {
+    const drawnCards = [];
+    for (let i = 0; i < count; i++) {
+        const card = deck.pop();
+        drawnCards.push(card);
+    }
+    return drawnCards;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function hasFourOfAKind(cards) {
+    const rankCount = {};
+    for (const card of cards) {
+        const rank = card.split('_')[2];
+        if (!rankCount[rank]) {
+            rankCount[rank] = 0;
+        }
+        rankCount[rank]++;
+        if (rankCount[rank] === 4) {
+            return true;
+        }
+    }
+    return false;
 }
 
 const port = 5000;
