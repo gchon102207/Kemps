@@ -98,7 +98,43 @@ io.on('connection', (socket) => {
         lobbies.set(lobbyCode, { communityCards, playerCards, deck, teams: { team1, team2 } });
 
         // Emit 'gameStartingBroadcast' to all clients with their cards, community cards, and teams
-        io.to(lobbyCode).emit('gameStartingBroadcast', { communityCards, playerCards, teams: { team1, team2 } });
+        io.to(lobbyCode).emit('gameStartingBroadcast', { communityCards, playerCards, players, teams: { team1, team2 } });
+    });
+
+    socket.on('resetGame', ({ lobbyCode }) => {
+        const lobbyData = lobbies.get(lobbyCode);
+        if (!lobbyData) return;
+    
+        // Reset the game state for the lobby
+        lobbyData.playerCards = {}; // Reset player cards
+        lobbyData.communityCards = []; // Reset community cards
+        lobbyData.deck = generateDeck(); // Generate a new deck
+        shuffleDeck(lobbyData.deck); // Shuffle the new deck
+    
+        // Draw the first 4 community cards
+        const communityCards = drawCards(lobbyData.deck, 4);
+    
+        // Assign 4 cards to each player
+        const players = getUsersInLobby(lobbyCode);
+        const playerCards = {};
+        players.forEach((player, index) => {
+            playerCards[player] = drawCards(lobbyData.deck, 4); // Take 4 cards for each player
+        });
+    
+        // Retain the existing teams
+        const teams = lobbyData.teams;
+    
+        // Store the community and player cards at the lobby level in the Map
+        lobbies.set(lobbyCode, { communityCards, playerCards, deck: lobbyData.deck, teams });
+    
+        // Notify all players in the lobby that the game is restarting
+        io.to(lobbyCode).emit('restartGame', {
+            communityCards,
+            playerCards,
+            teams,
+            players,
+            winCounts
+        });
     });
 
     socket.on('swapCard', ({ playerCard, communityCard, swappingPlayer }) => {
@@ -167,6 +203,63 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('kempsRequest', ({ username }) => {
+        const lobbyCode = getLobbyCode(socket.id);
+        if (!lobbyCode) return;
+    
+        const lobbyData = lobbies.get(lobbyCode);
+        const teams = lobbyData.teams;
+        const playerCards = lobbyData.playerCards;
+    
+        const team = teams.team1.includes(username) ? teams.team1 : teams.team2;
+        const teammate = team.find(player => player !== username);
+        const opposingTeam = teams.team1.includes(username) ? teams.team2 : teams.team1;
+    
+        let success = false;
+        if (hasFourOfAKind(playerCards[teammate])) {
+            success = true;
+        }
+    
+        if (success) {
+            // The teammate has four of a kind
+            team.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You win!' });
+            });
+            opposingTeam.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You lose!' });
+            });
+    
+            // Update win count
+            if (teams.team1.includes(username)) {
+                winCounts.team1++;
+            } else {
+                winCounts.team2++;
+            }
+        } else {
+            // The teammate does not have four of a kind
+            team.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You lose!' });
+            });
+            opposingTeam.forEach(player => {
+                const socketId = Object.keys(users).find(key => users[key] === player);
+                io.to(socketId).emit('kempsResult', { message: 'You win!' });
+            });
+    
+            // Update win count
+            if (teams.team1.includes(username)) {
+                winCounts.team2++;
+            } else {
+                winCounts.team1++;
+            }
+        }
+    
+        // Emit updated win counts
+        io.to(lobbyCode).emit('updateWinCounts', winCounts);
+    });
+    
     socket.on('counterkempsRequest', ({ username }) => {
         const lobbyCode = getLobbyCode(socket.id);
         if (!lobbyCode) return;
@@ -190,68 +283,52 @@ io.on('connection', (socket) => {
             // The opposing team has four of a kind
             team.forEach(player => {
                 const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('counterkempsResult', { message: 'You win' });
+                io.to(socketId).emit('counterkempsResult', { message: 'You win!' });
             });
             opposingTeam.forEach(player => {
                 const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('counterkempsResult', { message: 'You lose' });
+                io.to(socketId).emit('counterkempsResult', { message: 'You lose!' });
             });
+    
+            // Update win count
+            if (teams.team1.includes(username)) {
+                winCounts.team1++;
+            } else {
+                winCounts.team2++;
+            }
         } else {
             // The opposing team does not have four of a kind
             team.forEach(player => {
                 const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('counterkempsResult', { message: 'You lose' });
+                io.to(socketId).emit('counterkempsResult', { message: 'You lose!' });
             });
             opposingTeam.forEach(player => {
                 const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('counterkempsResult', { message: 'You win' });
+                io.to(socketId).emit('counterkempsResult', { message: 'You win!' });
             });
-        }
-    });
-
-    socket.on('kempsRequest', ({ username }) => {
-        const lobbyCode = getLobbyCode(socket.id);
-        if (!lobbyCode) return;
     
-        const lobbyData = lobbies.get(lobbyCode);
-        const teams = lobbyData.teams;
-        const playerCards = lobbyData.playerCards;
-    
-        const team = teams.team1.includes(username) ? teams.team1 : teams.team2;
-        const teammate = team.find(player => player !== username);
-        const opposingTeam = teams.team1.includes(username) ? teams.team2 : teams.team1;
-    
-        let success = false;
-        if (hasFourOfAKind(playerCards[teammate])) {
-            success = true;
+            // Update win count
+            if (teams.team1.includes(username)) {
+                winCounts.team2++;
+            } else {
+                winCounts.team1++;
+            }
         }
     
-        if (success) {
-            // The teammate has four of a kind
-            team.forEach(player => {
-                const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('kempsResult', { message: 'You win' });
-            });
-            opposingTeam.forEach(player => {
-                const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('kempsResult', { message: 'You lose' });
-            });
-        } else {
-            // The teammate does not have four of a kind
-            team.forEach(player => {
-                const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('kempsResult', { message: 'You lose' });
-            });
-            opposingTeam.forEach(player => {
-                const socketId = Object.keys(users).find(key => users[key] === player);
-                io.to(socketId).emit('kempsResult', { message: 'You win' });
-            });
-        }
+        // Emit updated win counts
+        io.to(lobbyCode).emit('updateWinCounts', winCounts);
     });
 
     socket.on('disconnect', () => {
         delete users[socket.id];
         console.log('User disconnected:', socket.id);
+    });
+
+    socket.on('chatMessage', ({ username, message }) => {
+        const lobbyCode = getLobbyCode(socket.id);
+        if (lobbyCode) {
+            io.to(lobbyCode).emit('chatMessage', { username, message });
+        }
     });
 });
 
@@ -323,6 +400,11 @@ function hasFourOfAKind(cards) {
     }
     return false;
 }
+
+const winCounts = {
+    team1: 0,
+    team2: 0
+};
 
 const port = 5000;
 server.listen(port, (err) => {
