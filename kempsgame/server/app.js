@@ -167,7 +167,10 @@ io.on('connection', (socket) => {
                 lobbies.set(lobbyCode, lobbyData);
     
                 // Emit updated game state
-                io.to(lobbyCode).emit('gameUpdated', { communityCards, playerCards, swappingPlayer });
+                io.to(lobbyCode).emit('gameUpdated', { playerCard, communityCard, communityCards, playerCards, swappingPlayer });
+    
+                // Emit chat message about the card swap
+                io.to(lobbyCode).emit('chatMessage', { username: 'System', message: `${swappingPlayer} swapped ${playerCard} with ${communityCard}` });
             } else {
                 console.log('Invalid card swap attempt');
                 socket.emit('error', { message: 'Invalid card swap attempt' });
@@ -317,6 +320,12 @@ io.on('connection', (socket) => {
     
         // Emit updated win counts
         io.to(lobbyCode).emit('updateWinCounts', winCounts);
+    });
+
+    socket.on('backToLobby', ({ lobbyCode }) => {
+        if (lobbies.has(lobbyCode)) {
+            io.to(lobbyCode).emit('backToLobby');
+        }
     });
 
     socket.on('disconnect', () => {
