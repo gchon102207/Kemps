@@ -1,7 +1,7 @@
 const MongoClient = require("mongodb").MongoClient;
 const ObjectId = require('mongodb').ObjectId;
 const DBNAME = 'kemps';
-const dbURL = process.env.DB_URI || "mongodb://127.0.0.1";
+const dbURL = process.env.DB_URI || "mongodb+srv://gchon1022:gavindb102207!@kemps.zl4sk.mongodb.net/?retryWrites=true&w=majority&appName=Kemps";
 
 const client = new MongoClient(dbURL);
 
