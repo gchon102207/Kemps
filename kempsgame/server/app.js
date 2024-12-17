@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
                 users[socket.id] = username;
                 socket.join(lobbyCode);
                 socket.emit('joinedLobby', { code: lobbyCode });
-                io.to(lobbyCode).emit('userJoined', { users: getUsersInLobby(lobbyCode) });
+                io.to(lobbyCode).emit('userJoined', { users: getUsersInLobby(lobbyCode), code: lobbyCode });
             }
         } else {
             socket.emit('error', { message: 'Lobby code does not exist' });
