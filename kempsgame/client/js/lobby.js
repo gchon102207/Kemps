@@ -67,6 +67,16 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleStartButton(); // Enable/disable start button
     }
 
+    // Add Leave Lobby button
+    const leaveLobbyButton = document.getElementById('leave_lobby_button');
+    leaveLobbyButton.textContent = 'Leave Lobby';
+    leaveLobbyButton.addEventListener('click', () => {
+        socket.emit('leaveLobby');
+        window.location.href = '/profile'; // Redirect to profile screen
+    });
+
+    document.body.appendChild(leaveLobbyButton);
+
     // Toggle the "Start Game" button
     function toggleStartButton() {
         const startButton = document.getElementById('start_game_button');
@@ -164,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Load card back
             this.load.image('card_back', 'client/assets/card_back.png');
 
-            // this.load.audio('card_flip', 'client/assets/card.mp3'); later development
+            this.load.audio('card_flip', 'client/assets/card.mp3');
         }
 
         function create() {
@@ -411,8 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
             chatboxContainer.style.padding = '10px';
             chatboxContainer.style.overflowY = 'scroll';
             chatboxContainer.style.zIndex = '1000';
-            chatboxContainer.style.fontSize = '14px';
-            chatboxContainer.style.fontFamily = 'Noto Sans Lao, sans-serif';
         
             // Create chat messages container
             const chatMessages = document.createElement('div');
@@ -483,34 +491,26 @@ document.addEventListener('DOMContentLoaded', () => {
             resultMessage.style.fontWeight = 'bold';
             resultMessage.style.textAlign = 'center';
             resultMessage.style.marginBottom = '20px';
-            resultScreenContainer.appendChild(resultMessage);
         
-            // Create Play Again button
+            // Create "Play Again" button
             const playAgainButton = document.createElement('button');
             playAgainButton.textContent = 'Play Again';
-            playAgainButton.style.fontSize = '18px';
             playAgainButton.style.padding = '10px 20px';
+            playAgainButton.style.fontSize = '24px';
             playAgainButton.style.cursor = 'pointer';
-            playAgainButton.style.marginBottom = '10px'; // Add margin to separate buttons
+        
+            // Add event listener to the "Play Again" button
             playAgainButton.addEventListener('click', () => {
+                // Emit the resetGame event to the server
                 socket.emit('resetGame', { lobbyCode: storedCode });
             });
-            resultScreenContainer.appendChild(playAgainButton);
-
-            /* Planned for future development
-            // Create Back to Lobby button
-            const backButton = document.createElement('button');
-            backButton.textContent = 'Back to Lobby';
-            backButton.style.fontSize = '18px';
-            backButton.style.padding = '10px 20px';
-            backButton.style.cursor = 'pointer';
-            backButton.addEventListener('click', () => {
-                socket.emit('backToLobby', { lobbyCode: storedCode });
-            });
-            resultScreenContainer.appendChild(backButton);
         
+            // Append result message and button to result screen container
+            resultScreenContainer.appendChild(resultMessage);
+            resultScreenContainer.appendChild(playAgainButton);
+        
+            // Append result screen container to the body
             document.body.appendChild(resultScreenContainer);
-            */
         }
     };
 
@@ -535,78 +535,55 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultScreenContainer) {
                 document.body.removeChild(resultScreenContainer);
             }
-    
-            // Show the game container
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer) {
-                gameContainer.style.display = 'block';
-            }
-    
-            // Hide the lobby section
-            const lobbyContainer = document.getElementById('lobby-container');
-            if (lobbyContainer) {
-                lobbyContainer.style.display = 'none';
-            }
-        });
-        /* Planned for future development
-        socket.on('backToLobby', () => {
-            // Remove the result screen
-            const resultScreenContainer = document.getElementById('result-screen-container');
-            if (resultScreenContainer) {
-                document.body.removeChild(resultScreenContainer);
-            }
-    
-            // Show the lobby section
-            const lobbyContainer = document.getElementById('lobby-container');
-            if (lobbyContainer) {
-                lobbyContainer.style.display = 'block';
-            }
-    
-            // Hide the game container
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer) {
-                gameContainer.style.display = 'none';
-            }
+            
+            //Repopulate the game screen
+            window.communityCards.forEach((card, index) => {
+                if (board.communityCard[index]) {
+                    board.communityCard[index].setTexture(card); // Update the texture
+                    board.communityCard[index].cardName = card;  // Update the cardName property
+                } else {
+                    console.error('Community Card not found at index: ', index);
+                }
+            });
 
-            // Clear the chatbox
-            const chatMessages = document.getElementById('chat-messages');
-            if (chatMessages) {
-                chatMessages.innerHTML = '';
-            }
-
-            // Reset the scoreboard
-            updateScoreboard({ team1: 0, team2: 0 });
+            window.playerCards.forEach((card, index) => {
+                if (board.playerCard[index]) {
+                    board.playerCard[index].setTexture(card); // Update the texture
+                    board.playerCard[index].cardName = card;  // Update the cardName property
+                } else {
+                    console.error('Player Card not found at index: ', index);
+                }
+            });
+            
+            // Update the scoreboard
+            updateScoreboard(data.winCounts); 
         });
+
+        isRestartGameListenerAdded = true;
+    }
 
         socket.on('updateWinCounts', (winCounts) => {
             updateScoreboard(winCounts);
-        });    
-    
-        isRestartGameListenerAdded = true;
-        */
-    }
-
-    socket.on('updateWinCounts', (winCounts) => {
-        updateScoreboard(winCounts);
-    });
-
-    // Listen for card swap completion
-    socket.on('gameUpdated', (data) => {
-        console.log("Game Updated:", data);
-        board.selectedCard = null; // Reset the selected card for swapping
-    
-        // Update the global community cards array
-        window.communityCards = data.communityCards;
-    
-        // Update community card images and properties
-        window.communityCards.forEach((card, index) => {
-            if (board.communityCard[index]) {
-                board.communityCard[index].setTexture(card); // Update the texture
-                board.communityCard[index].cardName = card;  // Update the cardName property
-            } else {
-                console.error('Community Card not found at index: ', index);
-            }
         });
+
+
+        // Listen for card swap completion
+        socket.on('gameUpdated', (data) => {
+            console.log("Game Updated:", data);
+            board.selectedCard = null; // Reset the selected card for swapping
+        
+            // Update the global community cards array
+            window.communityCards = data.communityCards;
+        
+            // Update community card images and properties
+            window.communityCards.forEach((card, index) => {
+                if (board.communityCard[index]) {
+                    board.communityCard[index].setTexture(card); // Update the texture
+                    board.communityCard[index].cardName = card;  // Update the cardName property
+                } else {
+                    console.error('Community Card not found at index: ', index);
+                }
+            });
     
         // Update the global player cards array
         window.playerCards = data.playerCards[storedUsername];

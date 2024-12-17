@@ -1,6 +1,19 @@
 const socket = io();
 const storedUsername = localStorage.getItem("username");
 
+const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            // Clear user data from localStorage
+            localStorage.removeItem('username');
+            localStorage.removeItem('email');
+            localStorage.removeItem('code');
+
+            // Redirect to the login (home) page
+            window.location.href = '/';
+        });
+    }
+
 if (storedUsername) {
     socket.emit('setUsername', storedUsername);
     document.getElementById("username").innerHTML = `Welcome, ${storedUsername}!`;
@@ -8,7 +21,7 @@ if (storedUsername) {
     console.error("No username found in localStorage");
 }
 
-/* Not necessary at current development stage
+/* For future development
 const addFriendButton = document.getElementById("addFriendButton");
 addFriendButton.addEventListener("click", async () => {
     const friendEmail = prompt("Enter the email of the friend you want to add:");
@@ -34,6 +47,7 @@ addFriendButton.addEventListener("click", async () => {
         }
     }
 });
+
 */
 
 const createGameButton = document.getElementById("createGameButton");
@@ -63,7 +77,7 @@ socket.on('error', (data) => {
     alert(data.message);
 });
 
-/* Not necessary at current development stage 
+/* For future development
 async function fetchFriendsList() {
     try {
         const response = await fetch('/getFriends', {

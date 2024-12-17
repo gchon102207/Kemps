@@ -29,7 +29,10 @@ h2{
 }
 
 button:not(:disabled) {
-    padding: 20px 200px; 
+    justify-content: center;
+    align-items: center;
+    width: 525px;
+    height: 70px;
     border-radius: 10px;
     margin-top: 0 px;
     margin-bottom: 50px;
@@ -38,7 +41,7 @@ button:not(:disabled) {
     cursor: pointer;
     background-color: #09360E;
     width: 100%; 
-    max-width: 800px;
+    max-width: 525px;
     font-size: 25px; 
     font-family: "Noto Sans Lao", sans-serif;
     white-space: nowrap;

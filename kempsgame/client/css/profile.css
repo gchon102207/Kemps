@@ -23,6 +23,7 @@ p {
     justify-content: space-between;
     padding-left: 260px;
 }
+/* future development
 .invites {
     position: fixed;
     top: 0;
@@ -59,6 +60,7 @@ p {
     text-align: center;
     font-family: "Noto Sans Lao", sans-serif;
 }
+*/
 
 .button-container {
     margin-top: 100px;
@@ -79,7 +81,7 @@ button {
     font-family: "Noto Sans Lao", sans-serif;
     white-space: nowrap;
 }
-
+/* future development
 #friendsList {
     list-style-type: none;
     font-size: 20px;
@@ -90,8 +92,26 @@ button {
 #friendsList li {
     margin-bottom: 30px; 
 }
+*/
 
 .invites h1 {
     margin-left: 18px; 
 }
 
+#logoutButton {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #f44336; 
+    font-family: "Noto Sans Lao", sans-serif;
+    color: white; 
+    border: none; 
+    border-radius: 5px; 
+    z-index: 1000; 
+    width: auto; 
+    max-width: 150px; 
+    white-space: nowrap; 
+}

@@ -8,7 +8,8 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
-    <script src="/client/js/lobby.js"></script>
+    <script src="/client/js/game.js"></script> <!-- Phaser-related logic -->
+    <script src="/client/js/lobby.js"></script> <!-- Lobby logic -->
 </head>
 <body>
     <!-- Lobby Section -->
@@ -16,6 +17,7 @@
         <h1>Lobby Code: <span id="lobby_code_display"></span></h1>
         <h2>Players in Lobby:<div id="players_display"></div></h2>
         <button id="start_game_button" disabled>Start Game</button>
+        <button id="leave_lobby_button">Leave Lobby</button>
     </div>
     
     <!-- Game Section -->
