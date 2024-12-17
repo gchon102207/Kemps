@@ -70,6 +70,7 @@ joinGameButton.addEventListener("click", () => {
 });
 
 socket.on('joinedLobby', (data) => {
+    localStorage.setItem("code", data.code);
     window.location.href = `/lobby?code=${data.code}`;
 });
 

@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('userJoined', (data) => {
         console.log("User Joined Event Received:", data);
         updateUsersList(data.users);
-        localStorage.setItem("code", data.code);
     });
 
     // Track current number of players
