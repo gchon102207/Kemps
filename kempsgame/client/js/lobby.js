@@ -2,7 +2,7 @@ var game;
 var board;
 let isRestartGameListenerAdded = false;
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = io(); // Initialize socket.io connection
+    const socket = io('https://kemps-f1982c4353ba.herokuapp.com/'); // Initialize socket.io connection
 
     socket.on('connect', () => {
         console.log('Connected to socket server');

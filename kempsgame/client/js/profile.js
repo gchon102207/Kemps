@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('https://kemps-f1982c4353ba.herokuapp.com/');
 const storedUsername = localStorage.getItem("username");
 
 const logoutButton = document.getElementById('logoutButton');
