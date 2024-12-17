@@ -2,7 +2,7 @@ var game;
 var board;
 let isRestartGameListenerAdded = false;
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = io('https://kemps-f1982c4353ba.herokuapp.com/'); // Initialize socket.io connection
+    const socket = io(); // Initialize socket.io connection
 
     socket.on('connect', () => {
         console.log('Connected to socket server');
@@ -66,16 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlayerCount = users.length; // Update player count
         toggleStartButton(); // Enable/disable start button
     }
-
-    // Add Leave Lobby button
-    const leaveLobbyButton = document.getElementById('leave_lobby_button');
-    leaveLobbyButton.textContent = 'Leave Lobby';
-    leaveLobbyButton.addEventListener('click', () => {
-        socket.emit('leaveLobby');
-        window.location.href = '/profile'; // Redirect to profile screen
-    });
-
-    document.body.appendChild(leaveLobbyButton);
 
     // Toggle the "Start Game" button
     function toggleStartButton() {

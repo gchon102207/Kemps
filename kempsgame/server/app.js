@@ -73,15 +73,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('leaveLobby', () => {
-        const lobbyCode = getLobbyCode(socket.id);
-        if (lobbyCode) {
-            socket.leave(lobbyCode);
-            delete users[socket.id];
-            io.to(lobbyCode).emit('userLeft', { users: getUsersInLobby(lobbyCode) });
-        }
-    });
-    
     socket.on('startGame', ({ lobbyCode }) => {
         console.log(`Starting game in lobby: ${lobbyCode}`);
 
@@ -415,7 +406,7 @@ const winCounts = {
     team2: 0
 };
 
-const port = process.env.PORT || 5000;
+const port = 5000;
 server.listen(port, (err) => {
     if (err) throw err;
     console.log("Listening on port: " + port);
