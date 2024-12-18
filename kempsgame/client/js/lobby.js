@@ -411,6 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
             chatboxContainer.style.padding = '10px';
             chatboxContainer.style.overflowY = 'scroll';
             chatboxContainer.style.zIndex = '1000';
+            chatboxContainer.style.fontSize = '14px';
+            chatboxContainer.style.fontFamily = 'Noto Sans Lao, sans-serif';
         
             // Create chat messages container
             const chatMessages = document.createElement('div');
